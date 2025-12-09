@@ -171,7 +171,8 @@ jobs:
         uses: test-summary/action@v2
         with:
           paths: bin/coverage/unit/report.xml       
-        if: always()
+        if: always() && hashFiles('bin/coverage/unit/report.xml') != ''
+        continue-on-error: true
   e2e:
     runs-on: [self-hosted, monkci-runners-8vcpu]
     name: e2e (${{ matrix.mode }}, ${{ matrix.channel }})
@@ -254,11 +255,10 @@ jobs:
           BUILD_TAGS: e2e
 
       - name: Setup tmate session
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
+        if: false  # Disabled - not needed for testing and requires credentials
         uses: mxschmitt/action-tmate@8b4e4ac71822ed7e0ad5fb3d1c33483e9e8fb270 # v3.11
         with:
           limit-access-to-actor: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Test plugin mode
         if: ${{ matrix.mode == 'plugin' }}
@@ -286,7 +286,8 @@ jobs:
         uses: test-summary/action@v2
         with:
           paths: /tmp/report/report.xml       
-        if: always()
+        if: always() && hashFiles('/tmp/report/report.xml') != ''
+        continue-on-error: true
   coverage:
     runs-on: [self-hosted, monkci-runners-8vcpu]
     needs:
