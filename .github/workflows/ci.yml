@@ -166,12 +166,22 @@ jobs:
           name: coverage-data-unit
           path: bin/coverage/unit/
           if-no-files-found: error
+      - name: Check if report exists
+        id: check-report
+        if: always()
+        run: |
+          if [ -f bin/coverage/unit/report.xml ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
       - 
         name: Unit Test Summary
         uses: test-summary/action@v2
         with:
           paths: bin/coverage/unit/report.xml       
-        if: always() && hashFiles('bin/coverage/unit/report.xml') != ''
+        if: always() && steps.check-report.outputs.exists == 'true'
         continue-on-error: true
   e2e:
     runs-on: [self-hosted, monkci-runners-8vcpu]
@@ -282,11 +292,21 @@ jobs:
           cp bin/build/docker-compose /usr/local/bin
           make e2e-compose-standalone
 
+      - name: Check if e2e report exists
+        id: check-e2e-report
+        if: always()
+        run: |
+          if [ -f /tmp/report/report.xml ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
       - name: e2e Test Summary
         uses: test-summary/action@v2
         with:
           paths: /tmp/report/report.xml       
-        if: always() && hashFiles('/tmp/report/report.xml') != ''
+        if: always() && steps.check-e2e-report.outputs.exists == 'true'
         continue-on-error: true
   coverage:
     runs-on: [self-hosted, monkci-runners-8vcpu]
